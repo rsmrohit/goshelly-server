@@ -168,11 +168,21 @@ var l net.Listener
 var sslEmail string
 var PORT string
 
-func StartServer(port string, EMAIL string) {
 
-	//initialize global variables here
+var notEmail string
+var notSlack string
+var slackChn string
+
+func StartServer(port string, EMAIL string, not_email string, not_slack string, slack_chn string, emailEn bool ,slackEn bool) {  //last 3 unused
+
+	//initialize global variables here, nothing interesting here.
 	sslEmail = EMAIL
 	PORT = port
+	emailEN = emailEn
+	slackEN = slackEn
+	notEmail = not_email
+	notSlack = not_slack
+	slackChn = slack_chn
 	//
 
 	os.Mkdir("./logs/", os.ModePerm)
