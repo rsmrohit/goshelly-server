@@ -225,7 +225,7 @@ func StartServer(port string, sslEmail string, not_email string, not_slack strin
 	servlog = log.New(servfile, "", log.LstdFlags)
 	servlog.Println("Starting GoShelly server...")
 
-	//genCert()// Uncomment if NOT using image.
+	genCert()// Uncomment if NOT using image.
 	servlog.Println("Loading SSL Certificates")
 	cert, err := tls.LoadX509KeyPair("certs/server.pem", "certs/server.key")
 
@@ -245,6 +245,7 @@ func StartServer(port string, sslEmail string, not_email string, not_slack strin
 
 	for {
 		conn, err := l.Accept()
+		
 
 		if err != nil {
 			servlog.Printf("%s Client accept error: %s", conn.RemoteAddr(), err)
