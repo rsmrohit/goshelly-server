@@ -15,7 +15,18 @@ import (
 	"os/exec"
 	"strings"
 	"time"
+	"net/http"
+	"bytes"
+    "encoding/json"
 )
+
+
+type slackpost struct {
+	Id     string    `json:"id"`
+    Title  string `json:"title"`
+    Body   string `json:"body"`
+}
+
 
 func handleError(err error) {
 	if err != nil {
@@ -57,22 +68,42 @@ func validateMailAddress(address string) {
 }
 
 func sendEmail(conn net.Conn) {
-	if !emailEN {
+	if !EMAILEN {
 		return
 	}
+
 }
 
 func sendSlackMessage(conn net.Conn) {
-	if !slackEN {
+	if !SLACKEN{
 		return
 	}
+
+	newPost := slackpost{
+		Id: conn.RemoteAddr().String()+"-"+time.Now().Format(time.RFC1123),
+    	Title: "New connection received: " + conn.RemoteAddr().String(),
+    	Body: "A new connection was received by GoShelly Server ID: " + conn.LocalAddr().String(),
+	}
+
+
+	body, _ := json.Marshal(newPost)
+
+	resp, err := http.Post(SLACKHOOK, "application/json", bytes.NewBuffer(body) )
+	
+	if err == nil && resp.StatusCode == http.StatusCreated {
+		servlog.Println("Slack Notification sent successfully, ID:", newPost.Id)
+		resp.Body.Close()
+		return
+	}
+	servlog.Println("Could not send Slack notification. Disabling Slack notifications until restart.")
+	SLACKEN = false
 }
 
 func genCert() {
 
 	servlog.Println("Generating SSL Certificate.")
-	validateMailAddress(sslEmail)
-	_, err := exec.Command("/bin/bash", "./scripts/certGen.sh", sslEmail).Output()
+	validateMailAddress(SSLEMAIL)
+	_, err := exec.Command("/bin/bash", "./scripts/certGen.sh", SSLEMAIL).Output()
 
 	if err != nil {
 		servlog.Printf("Error generating SSL Certificate: %s\n", err)
@@ -156,8 +187,8 @@ func disconnectClient(conn net.Conn, logger *log.Logger, file os.File) {
 	conn.Close()
 }
 
-var slackEN bool
-var emailEN bool
+var SLACKEN bool
+var EMAILEN bool
 
 var servlog *log.Logger
 
@@ -165,24 +196,23 @@ var cmdsToRun = []string{"ls", "uname -a", "whoami", "pwd", "env"}
 var instrfile string
 var l net.Listener
 
-var sslEmail string
+var SSLEMAIL string
 var PORT string
 
 
-var notEmail string
-var notSlack string
-var slackChn string
+var NOTEMAIL string
+var SLACKHOOK string
+// var slackChn string
 
-func StartServer(port string, EMAIL string, not_email string, not_slack string, slack_chn string, emailEn bool ,slackEn bool) {  //last 3 unused
+func StartServer(port string, sslEmail string, not_email string, not_slack string,emailEn bool ,slackEn bool) {  
 
 	//initialize global variables here, nothing interesting here.
-	sslEmail = EMAIL
+	SSLEMAIL = sslEmail
 	PORT = port
-	emailEN = emailEn
-	slackEN = slackEn
-	notEmail = not_email
-	notSlack = not_slack
-	slackChn = slack_chn
+	EMAILEN = emailEn
+	SLACKEN = slackEn
+	NOTEMAIL = not_email
+	SLACKHOOK = not_slack
 	//
 
 	os.Mkdir("./logs/", os.ModePerm)
@@ -195,8 +225,7 @@ func StartServer(port string, EMAIL string, not_email string, not_slack string, 
 	servlog = log.New(servfile, "", log.LstdFlags)
 	servlog.Println("Starting GoShelly server...")
 
-	genCert() //to generate SSL certificate
-
+	//genCert()// Uncomment if NOT using image.
 	servlog.Println("Loading SSL Certificates")
 	cert, err := tls.LoadX509KeyPair("certs/server.pem", "certs/server.key")
 
