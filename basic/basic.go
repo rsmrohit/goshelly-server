@@ -240,6 +240,7 @@ func StartServer(port string, sslEmail string, not_email string, not_slack strin
 	l, err = tls.Listen("tcp", service, &config)
 	if err != nil {
 		servlog.Printf("Server Listen error: %s", err)
+		os.Exit(1)
 	}
 	servlog.Println("Server Listening on port: ", PORT)
 
