@@ -1,2 +1,5 @@
-./certs
+certs/
+logs/
+*.gitignore
+
 *.md
