@@ -1,0 +1,17 @@
+2022/06/29 04:46:51 Starting GoShelly server...
+2022/06/29 04:46:51 MODE: DEMO
+2022/06/29 04:46:51 PORT: 443
+2022/06/29 04:46:51 CMDSTORUN:  [ls uname -a whoami pwd env]
+2022/06/29 04:46:51 SSLEMAIL: goshellydemo@araalinetworks.com
+2022/06/29 04:46:51 SLACKEN:  true
+2022/06/29 04:46:51 EMAILEN:  false
+2022/06/29 04:46:51 NOTEMAIL: all@araalinetworks.com
+---
+2022/06/29 04:46:51 Generating SSL Certificate.
+2022/06/29 04:46:51 Email Verified. True.
+2022/06/29 04:46:51 Loading SSL Certificates
+2022/06/29 04:46:51 Server Listening on port:  443
+2022/06/29 04:46:53 Client accepted: 127.0.0.1:50423
+2022/06/29 04:46:53 SSL ok=true
+2022/06/29 04:46:53 Handling Client:  127.0.0.1:50423
+2022/06/29 04:47:03 Notifying Slack.

@@ -6,6 +6,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -16,7 +17,10 @@ var configCmd = &cobra.Command{
 	Short: "Configure GoShelly for use in your system.",
 	Long: ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("config called")
+		
+		os.MkdirAll("./logs/connections/", os.ModePerm)
+		os.MkdirAll("./logs/serverlogs/", os.ModePerm)
+		fmt.Println("GoShelly Server configured. You are good to go :)")
 	},
 }
 

@@ -1,0 +1,19 @@
+2022/06/29 04:49:53 Starting GoShelly server...
+2022/06/29 04:49:53 MODE: DEMO
+2022/06/29 04:49:53 PORT: 443
+2022/06/29 04:49:53 CMDSTORUN:  [ls uname -a whoami pwd env]
+2022/06/29 04:49:53 SSLEMAIL: goshellydemo@araalinetworks.com
+2022/06/29 04:49:53 SLACKEN:  true
+2022/06/29 04:49:53 EMAILEN:  false
+2022/06/29 04:49:53 NOTEMAIL: all@araalinetworks.com
+---
+2022/06/29 04:49:53 Generating SSL Certificate.
+2022/06/29 04:49:53 Email Verified. True.
+2022/06/29 04:49:54 Loading SSL Certificates
+2022/06/29 04:49:54 Server Listening on port:  443
+2022/06/29 04:49:57 Client accepted: 127.0.0.1:50439
+2022/06/29 04:49:57 SSL ok=true
+2022/06/29 04:49:57 Handling Client:  127.0.0.1:50439
+2022/06/29 04:50:07 Notifying Slack.
+2022/06/29 04:50:07 ERROR:  <nil>
+2022/06/29 04:50:07 HTTPSTATUSCODE: 403. Could not send Slack notification. Disabling Slack notifications until restart.

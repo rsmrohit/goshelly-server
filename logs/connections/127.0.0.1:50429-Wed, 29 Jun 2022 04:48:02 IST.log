@@ -1,0 +1,44 @@
+2022/06/29 04:48:02 FILE BEGINS HERE.
+2022/06/29 04:48:02 Client connected:  127.0.0.1:50429
+2022/06/29 04:48:02 EXECUTE: ls
+2022/06/29 04:48:04 RES: certGen.sh
+certs
+go.mod
+go.sum
+goshelly
+tcpC.go
+
+2022/06/29 04:48:04 EXECUTE: uname -a
+2022/06/29 04:48:06 RES: Darwin Anjus-MacBook-Air.local 21.5.0 Darwin Kernel Version 21.5.0: Tue Apr 26 21:08:29 PDT 2022; root:xnu-8020.121.3~4/RELEASE_ARM64_T8101 arm64
+
+2022/06/29 04:48:06 EXECUTE: whoami
+2022/06/29 04:48:08 RES: anjumaggie
+
+2022/06/29 04:48:08 EXECUTE: pwd
+2022/06/29 04:48:10 RES: /Users/anjumaggie/Desktop/Soham Work/client-app
+nel Version 21.5.0: Tue Apr 26 21:08:29 PDT 2022; root:xnu-8020.121.3~4/RELEASE_ARM64_T8101 arm64
+
+2022/06/29 04:48:10 EXECUTE: env
+2022/06/29 04:48:12 RES: MANPATH=/opt/homebrew/share/man::
+HOSTEMAILPWD=
+TERM_PROGRAM=Apple_Terminal
+SSLCERTGENEMAIL_CLIENT=araaligoshellyclient@gmail.com
+SHELL=/bin/zsh
+TERM=xterm-256color
+HOMEBREW_REPOSITORY=/opt/homebrew
+TMPDIR=/var/folders/k9/nn6_ndp56q38khxkhr99sgt80000gn/T/
+GOBIN=/Users/anjumaggie/go/bin
+HOSTEMAIL=
+TERM_PROGRAM_VERSION=445
+MESSAGE=SOMEONE CONNECTED TO GOSHELLY SERVER
+TERM_SESSION_ID=671D2966-D146-44B2-ABB5-BE233D52AB72
+EMAIL_ID=all@araalinetworks.com
+USER=anjumaggie
+SSH_AUTH_SOCK=/private/tmp/com.apple.launchd.NrGxOjYzPS/Listeners
+PATH=/opt/homebrew/bin:/opt/homebrew/sbin:/Library/Frameworks/Python.framework/Versions/3.10/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Library/Apple/usr/bin:/Users/anjumaggie/go/bin
+_=/usr/bin/env
+__CFBundleIdentifier=com.app
+2022/06/29 04:48:12 Disconnecting Client:  127.0.0.1
+2022/06/29 04:48:12 
+DONE.
+FILE ENDS HERE.

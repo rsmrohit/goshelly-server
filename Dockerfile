@@ -1,10 +1,10 @@
 # syntax=docker/dockerfile:1
-FROM --platform=linux/amd64 ubuntu:latest  
-WORKDIR /app
-# COPY /scripts/certGen.sh ./
-COPY *.sh ./
-# COPY certGen.sh /
-RUN chmod +x /certGen.sh && /certGen.sh
+# FROM --platform=linux/amd64 ubuntu:latest  
+# WORKDIR /app
+# # COPY /scripts/certGen.sh ./
+# COPY *.sh ./
+# # COPY certGen.sh /
+# RUN chmod +x /certGen.sh && /certGen.sh
 
 
 

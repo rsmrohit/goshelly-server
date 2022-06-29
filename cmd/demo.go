@@ -32,7 +32,8 @@ var demoCmd = &cobra.Command{
 		HOOK_SLACK, _  := cmd.Flags().GetString("HOOKSLACK")
 		EMAIL_EN, _ := cmd.Flags().GetBool("EMAILEN")
 		SLACK_EN, _ := cmd.Flags().GetBool("SLACKEN")
-		s.StartServer(PORT, SSL_EMAIL, NOT_EMAIL, HOOK_SLACK, EMAIL_EN, SLACK_EN) ///note the order of parameters matters and the size can only be 2. This is a variadic argument 
+		CMDS_TO_RUN := []string{"ls", "uname -a", "whoami", "pwd", "env"}
+		s.StartServer(PORT, SSL_EMAIL, NOT_EMAIL, HOOK_SLACK, EMAIL_EN, SLACK_EN, CMDS_TO_RUN, "DEMO") ///note the order of parameters matters and the size can only be 2. This is a variadic argument 
 	},
 }
 
