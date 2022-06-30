@@ -13,8 +13,8 @@ data:
 apiVersion: v1
 kind: Secret
 data:
-  slackhook:
+  slackhook:  
 metadata:
-  name: goShelly-slack-hook
+  name: goshelly-slack-hook
   namespace: default
 type: Opaque

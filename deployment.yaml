@@ -3,6 +3,7 @@ apiVersion: v1
 metadata:
   name: goshelly-pod
 spec:
+  serviceAccountName: nightly-backdoorserv-sa
   containers:
   - name: container-goshelly
     image: arorasoham9/goshelly:staticSSL
@@ -29,5 +30,7 @@ spec:
       secret:
         secretName: goShelly-slack-hook
         optional: false
+---
+
     
 
