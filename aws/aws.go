@@ -16,6 +16,7 @@ func SendEmail(conn net.Conn, EMAILEN bool, NOTEMAIL string,servlog *log.Logger)
 	if !EMAILEN {
 		return nil 
 	}
+    servlog.Println("Notifying email.")
 	TEMPLATE := t.Emailtemp{
 		SENDER: "support@araalinetworks.com",
 		RECIPIENT: NOTEMAIL,
@@ -31,7 +32,7 @@ func SendEmail(conn net.Conn, EMAILEN bool, NOTEMAIL string,servlog *log.Logger)
         Region:aws.String("us-west-2")},
     )
 	if err != nil{
-		servlog.Println("Email sending failed. Disabling email notification till restart.")
+		servlog.Println("Email sending failed. Disabling email notifications until restart.")
 		return err
 	}
     

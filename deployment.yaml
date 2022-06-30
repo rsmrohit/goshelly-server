@@ -1,0 +1,33 @@
+kind: Pod 
+apiVersion: v1 
+metadata:
+  name: goshelly-pod
+spec:
+  containers:
+  - name: container-goshelly
+    image: arorasoham9/goshelly:staticSSL
+    volumeMounts:
+    - name: goshelly-configmap-volume
+      mountPath: "/etc/goshelly-configmap-volume"
+      readOnly: true
+    - name: goshelly-secret-volume
+      mountPath: "/etc/goshelly-secret-volume"
+      readOnly: true
+    resources:
+      limits:
+        memory: 512Mi
+        cpu: "1"
+      requests:
+        memory: 256Mi
+        cpu: "0.2"
+  volumes:
+    - name: goshelly-configmap-volume
+      configMap:
+        name: goshelly-configmap
+        optional: false
+    - name: goshelly-secret-volume
+      secret:
+        secretName: goShelly-slack-hook
+        optional: false
+    
+

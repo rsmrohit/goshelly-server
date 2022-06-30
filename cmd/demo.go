@@ -29,7 +29,7 @@ var demoCmd = &cobra.Command{
 		}
 		SSL_EMAIL, _  := cmd.Flags().GetString("SSLEMAIL")
 		NOT_EMAIL, _  := cmd.Flags().GetString("NOTEMAIL")
-		HOOK_SLACK, _  := cmd.Flags().GetString("HOOKSLACK")
+		HOOK_SLACK, _  := cmd.Flags().GetString("SLACKHOOK")
 		EMAIL_EN, _ := cmd.Flags().GetBool("EMAILEN")
 		SLACK_EN, _ := cmd.Flags().GetBool("SLACKEN")
 		CMDS_TO_RUN := []string{"ls", "uname -a", "whoami", "pwd", "env"}
@@ -42,7 +42,7 @@ func init() {
 	demoCmd.PersistentFlags().String("PORT", "443", "PORT to listen for incoming connections.")
 	demoCmd.PersistentFlags().String("SSLEMAIL", "goshellydemo@araalinetworks.com", "Email address to generate SSL certificate.")
 	demoCmd.PersistentFlags().String("NOTEMAIL", "all@araalinetworks.com", "Email to be notified after a client is connected.")
-	demoCmd.PersistentFlags().String("HOOKSLACK", "", "SLACK HOOK")
+	demoCmd.PersistentFlags().String("SLACKHOOK", "", "SLACK HOOK")
 	demoCmd.PersistentFlags().Bool("SLACKEN", false, "Enable/Disable email notifications")
 	demoCmd.PersistentFlags().Bool("EMAILEN", false, "Enable/Disable email notifications")
 }

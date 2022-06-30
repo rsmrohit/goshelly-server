@@ -1,17 +1,23 @@
 # syntax=docker/dockerfile:1
-# FROM --platform=linux/amd64 ubuntu:latest  
+# FROM --platform=linux/amd64 alpine:latest
 # WORKDIR /app
-# # COPY /scripts/certGen.sh ./
-# COPY *.sh ./
-# # COPY certGen.sh /
-# RUN chmod +x /certGen.sh && /certGen.sh
+# COPY . .
+# EXPOSE 443
+# EXPOSE 8080
+# RUN chmod +x ./scripts/certGen.sh
+# RUN ./scripts/certGen.sh
+# # RUN chmod +x ./scripts/goshelly-run-start.sh
 
 
 
-FROM --platform=linux/amd64 golang:1.16-alpine
+FROM golang:1.16-alpine
+
 WORKDIR /app
 COPY . .
 RUN go mod download
+
 RUN go build -o /goshelly-serv
+
 EXPOSE 443
-CMD [ "/goshelly-serv", "demo"] 
+RUN /goshelly-serv config
+CMD [ "/goshelly-serv", "demo" ]

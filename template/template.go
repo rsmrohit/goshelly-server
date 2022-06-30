@@ -1,16 +1,13 @@
 package template
 
-
-
 type Emailtemp struct {
-	SENDER string
+	SENDER    string
 	RECIPIENT string
-	SUBJECT string
-	HTMLBODY string
-	TEXTBODY string
-	CHARSET string
+	SUBJECT   string
+	HTMLBODY  string
+	TEXTBODY  string
+	CHARSET   string
 }
-
 
 type Config struct {
 	SLACKEN   bool
@@ -23,14 +20,17 @@ type Config struct {
 	MODE      string
 }
 
-type SlackPost struct {
-	Id    string   `json:"id"`
-	Title string   `json:"title"`
-	Data  []ComRes `json:"data"`
-}
-type ComRes struct {
-	Cmd string `json:"cmd"`
-	Res string `json:"res"`
+
+type SlackSchemaOne struct {
+	Type     string           `json:"type"`
+	Elements []SlackSchemaTwo `json:"elements"`
 }
 
+type SlackSchemaTwo struct {
+	Type string `json:"type"`
+	Text string `json:"text"`
+}
 
+type SlackSchemaThree struct{
+	Blocks []SlackSchemaOne `json:"blocks"`
+}
