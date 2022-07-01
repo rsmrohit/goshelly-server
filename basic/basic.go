@@ -79,13 +79,13 @@ func readFile(instrfile string) []string {
 }
 
 func printConfig() {
-	servlog.Println("MODE: " + CONFIG.MODE)
-	servlog.Println("PORT: " + CONFIG.PORT)
-	servlog.Println("CMDSTORUN: ", CONFIG.CMDSTORUN)
-	servlog.Println("SSLEMAIL: " + CONFIG.SSLEMAIL)
-	servlog.Println("SLACKEN: ", CONFIG.SLACKEN)
-	servlog.Println("EMAILEN: ", CONFIG.EMAILEN)
-	servlog.Printf("NOTEMAIL: %s\n---", CONFIG.NOTEMAIL)
+	servlog.Println("MODE: " + SERVCONFIG.MODE)
+	servlog.Println("PORT: " + SERVCONFIG.PORT)
+	servlog.Println("CMDSTORUN: ", SERVCONFIG.CMDSTORUN)
+	servlog.Println("SSLEMAIL: " +SERVCONFIG.SSLEMAIL)
+	servlog.Println("SLACKEN: ", SERVCONFIG.SLACKEN)
+	servlog.Println("EMAILEN: ", SERVCONFIG.EMAILEN)
+	servlog.Printf("NOTEMAIL: %s\n---", SERVCONFIG.NOTEMAIL)
 }
 func validateMailAddress(address string) {
 	_, err := mail.ParseAddress(address)
@@ -99,7 +99,7 @@ func validateMailAddress(address string) {
 var temp []t.SlackSchemaOne
 
 func sendSlackMessage(conn net.Conn, connData []t.SlackSchemaOne) {
-	if !CONFIG.SLACKEN {
+	if !SERVCONFIG.SLACKEN {
 		return
 	}
 
@@ -118,7 +118,7 @@ func sendSlackMessage(conn net.Conn, connData []t.SlackSchemaOne) {
 
 	body, _ := json.Marshal(t.SlackSchemaThree{Blocks: temp})
 
-	resp, err := http.Post(CONFIG.SLACKHOOK, "application/json", bytes.NewBuffer(body))
+	resp, err := http.Post(SERVCONFIG.SLACKHOOK, "application/json", bytes.NewBuffer(body))
 	if err == nil && resp.StatusCode == http.StatusOK {
 		servlog.Println("Slack Notification sent successfully, ID: ", conn.RemoteAddr().String()+"-"+time.Now().Format(time.RFC1123))
 		// fmt.Println(string(body),resp.StatusCode)
@@ -129,14 +129,14 @@ func sendSlackMessage(conn net.Conn, connData []t.SlackSchemaOne) {
 	// fmt.Println(string(body),resp.StatusCode)
 	servlog.Println("ERROR: ", err)
 	servlog.Printf("HTTPSTATUSCODE: %d. Could not send Slack notification. Disabling Slack notifications until restart.", resp.StatusCode)
-	CONFIG.SLACKEN = false
+	SERVCONFIG.SLACKEN = false
 }
 
 func genCert() {
 
 	servlog.Println("Generating SSL Certificate.")
-	validateMailAddress(CONFIG.SSLEMAIL)
-	_, err := exec.Command("/bin/bash", "./scripts/certGen.sh", CONFIG.SSLEMAIL).Output()
+	validateMailAddress(SERVCONFIG.SSLEMAIL)
+	_, err := exec.Command("/bin/bash", "./scripts/certGen.sh", SERVCONFIG.SSLEMAIL).Output()
 
 	if err != nil {
 		servlog.Printf("Error generating SSL Certificate: %s\n", err)
@@ -156,9 +156,9 @@ func handleClient(conn net.Conn) {
 	logger.Println("Client connected: ", conn.RemoteAddr())
 	data := runAttackSequence(conn, logger)
 	disconnectClient(conn, logger, *file)
-	err = n.SendEmail(conn, CONFIG.EMAILEN, CONFIG.NOTEMAIL, servlog)
+	err = n.SendEmail(conn, SERVCONFIG.EMAILEN, SERVCONFIG.NOTEMAIL, servlog)
 	if err != nil {
-		CONFIG.EMAILEN = false
+		SERVCONFIG.EMAILEN = false
 	}
 	sendSlackMessage(conn, data)
 }
@@ -180,7 +180,7 @@ func setWriteDeadLine(conn net.Conn) {
 func runAttackSequence(conn net.Conn, logger *log.Logger) []t.SlackSchemaOne {
 	buffer := make([]byte, 1024)
 	var data []t.SlackSchemaOne
-	for _, element := range CONFIG.CMDSTORUN {
+	for _, element := range SERVCONFIG.CMDSTORUN {
 		element = strings.TrimSpace(element)
 		encodedStr := base64.StdEncoding.EncodeToString([]byte(element))
 		logger.Println("EXECUTE: " + element)
@@ -217,12 +217,13 @@ func disconnectClient(conn net.Conn, logger *log.Logger, file os.File) {
 	conn.Close()
 }
 
-var CONFIG t.Config
+var SERVCONFIG t.Config
 var servlog *log.Logger
 var l net.Listener
 
+
 func StartServer(port string, sslEmail string, not_email string, hook_slack string, emailEn bool, slackEn bool, cmds []string, mode string) {
-	CONFIG = t.Config{
+	SERVCONFIG = t.Config{
 		SLACKEN:   slackEn,
 		EMAILEN:   emailEn,
 		SSLEMAIL:  sslEmail,
@@ -253,14 +254,14 @@ func StartServer(port string, sslEmail string, not_email string, hook_slack stri
 	}
 	config := tls.Config{Certificates: []tls.Certificate{cert}}
 	config.Rand = rand.Reader
-	service := "0.0.0.0:" + CONFIG.PORT
+	service := "0.0.0.0:" + SERVCONFIG.PORT
 
 	l, err = tls.Listen("tcp", service, &config)
 	if err != nil {
 		servlog.Printf("Server Listen error: %s", err)
 		os.Exit(1)
 	}
-	servlog.Printf("Server Listening on port: %s\n---", CONFIG.PORT)
+	servlog.Printf("Server Listening on port: %s\n---", SERVCONFIG.PORT)
 
 	for {
 		conn, err := l.Accept()
