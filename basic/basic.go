@@ -22,6 +22,14 @@ import (
 	"time"
 )
 
+func CheckIfConfig() {
+	_, err := os.Stat("./logs/")
+		if os.IsNotExist(err){
+		fmt.Println("Goshelly not configured. Run the 'config' command to setup GoShelly.")
+		os.Exit(1)
+		}
+	}
+
 func handleError(err error) {
 	if err != nil {
 		log.Fatal(err)
@@ -51,6 +59,7 @@ func downloadFile(conn net.Conn, path string) {
 	_, err = io.Copy(fo, conn)
 	handleError(err)
 }
+
 func readFile(instrfile string) []string {
 
 	file, err := os.Open(instrfile)

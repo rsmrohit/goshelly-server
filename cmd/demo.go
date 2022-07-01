@@ -13,13 +13,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
+
+
 // demoCmd represents the demo command
 var demoCmd = &cobra.Command{
 	Use:   "demo",
 	Short: "Run a set of cli commands.",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) { 
-
+		s.CheckIfConfig()
 		fmt.Println("Running GoShelly Server - Demo.")
 		PORT, _ := cmd.Flags().GetString("PORT")
 		_, portErr := strconv.ParseInt(PORT,10, 64)

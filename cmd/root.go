@@ -14,7 +14,7 @@ import (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "cobrashelly",
+	Use:   "goshelly-serv",
 	Short: "",
 	Long: ``,
 	// Uncomment the following line if your bare application
