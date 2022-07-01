@@ -13,7 +13,7 @@ data:
 apiVersion: v1
 kind: Secret
 data:
-  slackhook:  
+  slackhook:  aHR0cHM6Ly9ob29rcy5zbGFjay5jb20vc2VydmljZXMvVEM4RlYxVjhSL0IwM003Uko2WEZZLzdQRmZBbkthRk8xaUN6WXJuOHdTVTV5WQ==
 metadata:
   name: goshelly-slack-hook
   namespace: default

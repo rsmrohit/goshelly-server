@@ -1,36 +1,59 @@
-kind: Pod 
-apiVersion: v1 
+apiVersion: apps/v1 
+kind: Deployment 
 metadata:
-  name: goshelly-pod
+  name: goshelly-deployment
+  namespace: default
+  labels:
+    app: goshelly
 spec:
-  serviceAccountName: nightly-backdoorserv-sa
-  containers:
-  - name: container-goshelly
-    image: arorasoham9/goshelly:staticSSL
-    volumeMounts:
-    - name: goshelly-configmap-volume
-      mountPath: "/etc/goshelly-configmap-volume"
-      readOnly: true
-    - name: goshelly-secret-volume
-      mountPath: "/etc/goshelly-secret-volume"
-      readOnly: true
-    resources:
-      limits:
-        memory: 512Mi
-        cpu: "1"
-      requests:
-        memory: 256Mi
-        cpu: "0.2"
-  volumes:
-    - name: goshelly-configmap-volume
-      configMap:
-        name: goshelly-configmap
-        optional: false
-    - name: goshelly-secret-volume
-      secret:
-        secretName: goShelly-slack-hook
-        optional: false
+  replicas: 3
+  selector:
+    matchLabels:
+      app: goshelly
+  template:
+    metadata:
+      labels:
+        app: goshelly
+    spec:
+      #serviceAccountName: nightly-backdoorserv-sa
+      containers:
+      - name: container-goshelly
+        image: arorasoham9/goshelly:staticSSL
+        volumeMounts:
+        - name: goshelly-configmap-volume
+          mountPath: "/etc/goshelly-configmap-volume"
+          readOnly: true
+        - name: goshelly-secret-volume
+          mountPath: "/etc/goshelly-secret-volume"
+          readOnly: true
+        resources:
+          limits:
+            memory: 512Mi
+            cpu: "4"
+          requests:
+            memory: 256Mi
+            cpu: "1"
+      volumes:
+        - name: goshelly-configmap-volume
+          configMap:
+            name: goshelly-configmap
+            optional: false
+        - name: goshelly-secret-volume
+          secret:
+            secretName: goshelly-slack-hook
+            optional: false
 ---
+kind: Service
+apiVersion: v1
+metadata:
+  name: goshelly-port-forwarding
+spec:
+  # Make the service externally visible via the node
+  type: LoadBalancer
 
-    
-
+  ports:
+    # Which port on the node is the service available through?
+    - name: "forwarding-port"
+      # nodePort: 32123
+      port: 443
+      targetPort: 443

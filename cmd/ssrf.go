@@ -16,6 +16,7 @@ var ssrfCmd = &cobra.Command{
 	Long: ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("ssrf called")
+		fmt.Println("Not yet implemented.")
 	},
 }
 

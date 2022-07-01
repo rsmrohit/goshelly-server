@@ -17,6 +17,7 @@ var simallCmd = &cobra.Command{
 	Long: ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("simall called")
+		fmt.Println("Not yet implemented.")
 	},
 }
 
