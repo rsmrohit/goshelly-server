@@ -16,7 +16,7 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   "goshelly-serv",
 	Short: "",
-	Long: ``,
+	Long: `Araali GoShelly is an open source tool that helps security teams safely test their detect and response readiness (the fire drill for SIEM/SOAR/EDR/NDR/XDR investment) for backdoors. This is typical when supply chain vulnerabilities like remote code execution (RCE) are exploited and represents a doomsday scenario where an attacker has full remote control capabilities based on the backdoor.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
