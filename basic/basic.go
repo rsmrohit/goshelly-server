@@ -3,16 +3,17 @@ package basic
 import (
 	"bufio"
 	"bytes"
-	n "cobrashelly/aws"
-	t "cobrashelly/template"
 	"crypto/rand"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	t "goshelly-server/template"
 	"io"
+	"io/ioutil"
 	"log"
+	"math"
 	"net"
 	"net/http"
 	"net/mail"
@@ -24,11 +25,11 @@ import (
 
 func CheckIfConfig() {
 	_, err := os.Stat("./logs/")
-		if os.IsNotExist(err){
+	if os.IsNotExist(err) {
 		fmt.Println("Goshelly not configured. Run the 'config' command to setup GoShelly.")
 		os.Exit(1)
-		}
 	}
+}
 
 func handleError(err error) {
 	if err != nil {
@@ -82,7 +83,7 @@ func printConfig() {
 	servlog.Println("MODE: " + SERVCONFIG.MODE)
 	servlog.Println("PORT: " + SERVCONFIG.PORT)
 	servlog.Println("CMDSTORUN: ", SERVCONFIG.CMDSTORUN)
-	servlog.Println("SSLEMAIL: " +SERVCONFIG.SSLEMAIL)
+	servlog.Println("SSLEMAIL: " + SERVCONFIG.SSLEMAIL)
 	servlog.Println("SLACKEN: ", SERVCONFIG.SLACKEN)
 	servlog.Println("EMAILEN: ", SERVCONFIG.EMAILEN)
 	servlog.Printf("NOTEMAIL: %s\n---", SERVCONFIG.NOTEMAIL)
@@ -156,11 +157,14 @@ func handleClient(conn net.Conn) {
 	logger.Println("Client connected: ", conn.RemoteAddr())
 	data := runAttackSequence(conn, logger)
 	disconnectClient(conn, logger, *file)
-	err = n.SendEmail(conn, SERVCONFIG.EMAILEN, SERVCONFIG.NOTEMAIL, servlog)
-	if err != nil {
-		SERVCONFIG.EMAILEN = false
-	}
+	//err = n.SendEmail(conn, SERVCONFIG.EMAILEN, SERVCONFIG.NOTEMAIL, servlog)
+	// if err != nil {
+	// 	SERVCONFIG.EMAILEN = false
+	// }
 	sendSlackMessage(conn, data)
+	logClean("./logs/serverlogs")
+	logClean("./logs/server-connections")
+
 }
 
 func setReadDeadLine(conn net.Conn) {
@@ -175,6 +179,29 @@ func setWriteDeadLine(conn net.Conn) {
 	if err != nil {
 		log.Panic("SetWriteDeadline failed:", err)
 	}
+}
+
+func logClean(dir string) {
+	files, _ := ioutil.ReadDir(dir)
+	if len(files) < SERVCONFIG.MAXLOGSTORE {
+		return
+	}
+
+	var newestFile string
+	var oldestTime  = math.Inf(1)
+	for _, f := range files {
+
+		fi, err := os.Stat(dir + f.Name())
+		if err != nil {
+			fmt.Println(err)
+		}
+		currTime := float64(fi.ModTime().Unix())
+		if currTime < oldestTime {
+			oldestTime = currTime
+			newestFile = f.Name()
+		}
+	}
+	os.Remove(dir+newestFile)
 }
 
 func runAttackSequence(conn net.Conn, logger *log.Logger) []t.SlackSchemaOne {
@@ -221,17 +248,17 @@ var SERVCONFIG t.Config
 var servlog *log.Logger
 var l net.Listener
 
-
-func StartServer(port string, sslEmail string, not_email string, hook_slack string, emailEn bool, slackEn bool, cmds []string, mode string) {
+func StartServer(port string, sslEmail string, notEmail string, hookSlack string, emailEn bool, slackEn bool, cmds []string, mode string, logmax int) {
 	SERVCONFIG = t.Config{
 		SLACKEN:   slackEn,
 		EMAILEN:   emailEn,
 		SSLEMAIL:  sslEmail,
-		NOTEMAIL:  not_email,
+		NOTEMAIL:  notEmail,
 		PORT:      port,
-		SLACKHOOK: hook_slack,
+		SLACKHOOK: hookSlack,
 		CMDSTORUN: cmds,
 		MODE:      mode,
+		MAXLOGSTORE : logmax,
 	}
 
 	servfile, err := os.OpenFile("./logs/serverlogs/"+"GoShellyServerLogs"+"-"+time.Now().Format(time.RFC1123)+".log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -263,6 +290,8 @@ func StartServer(port string, sslEmail string, not_email string, hook_slack stri
 	}
 	servlog.Printf("Server Listening on port: %s\n---", SERVCONFIG.PORT)
 
+	logClean("./logs/serverlogs/")
+	// logClean("./logs/server-connections/")
 	for {
 		conn, err := l.Accept()
 		if err != nil {

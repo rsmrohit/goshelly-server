@@ -1,7 +1,7 @@
 package aws
 
 import (
-	t "cobrashelly/template"
+	t "goshelly-server/template"
 	"log"
 	"net"
 	"time"

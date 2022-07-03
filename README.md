@@ -1,1 +1,1 @@
-# cobrashelly
+# GoShelly Server

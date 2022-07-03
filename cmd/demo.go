@@ -5,7 +5,7 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	s "cobrashelly/basic"
+	s "goshelly-server/basic"
 	"fmt"
 	"os"
 	"strconv"
@@ -35,7 +35,12 @@ var demoCmd = &cobra.Command{
 		EMAIL_EN, _ := cmd.Flags().GetBool("EMAILEN")
 		SLACK_EN, _ := cmd.Flags().GetBool("SLACKEN")
 		CMDS_TO_RUN := []string{"ls", "uname -a", "whoami", "pwd", "env"}
-		s.StartServer(PORT, SSL_EMAIL, NOT_EMAIL, HOOK_SLACK, EMAIL_EN, SLACK_EN, CMDS_TO_RUN, "DEMO") ///note the order of parameters matters and the size can only be 2. This is a variadic argument 
+		LOG_MAX, _ := cmd.Flags().GetInt("LOGMAX")
+		if LOG_MAX < 0 {
+			fmt.Println("LOG_MAX: Cannot be a negative number")
+			os.Exit(1)
+		}
+		s.StartServer(PORT, SSL_EMAIL, NOT_EMAIL, HOOK_SLACK, EMAIL_EN, SLACK_EN, CMDS_TO_RUN, "DEMO", LOG_MAX) ///note the order of parameters matters and the size can only be 2. This is a variadic argument 
 	},
 }
 
@@ -47,4 +52,5 @@ func init() {
 	demoCmd.PersistentFlags().String("SLACKHOOK", "", "SLACK HOOK")
 	demoCmd.PersistentFlags().Bool("SLACKEN", false, "Enable/Disable email notifications")
 	demoCmd.PersistentFlags().Bool("EMAILEN", false, "Enable/Disable email notifications")
+	demoCmd.PersistentFlags().Int("LOGMAX", 50, "Max number of log files to save.")
 }

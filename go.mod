@@ -1,9 +1,9 @@
-module cobrashelly
+module goshelly-server
 
 go 1.18
 
 require (
-	github.com/aws/aws-sdk-go v1.44.44
+	github.com/aws/aws-sdk-go v1.44.47
 	github.com/spf13/cobra v1.5.0
 )
 

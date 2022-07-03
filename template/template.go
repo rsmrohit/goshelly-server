@@ -18,6 +18,7 @@ type Config struct {
 	SLACKHOOK string
 	CMDSTORUN []string
 	MODE      string
+	MAXLOGSTORE int
 }
 
 
