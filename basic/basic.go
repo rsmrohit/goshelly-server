@@ -162,8 +162,8 @@ func handleClient(conn net.Conn) {
 	// 	SERVCONFIG.EMAILEN = false
 	// }
 	sendSlackMessage(conn, data)
-	logClean("./logs/serverlogs")
-	logClean("./logs/server-connections")
+	logClean("./logs/serverlogs/")
+	logClean("./logs/server-connections/")
 
 }
 
@@ -290,8 +290,7 @@ func StartServer(port string, sslEmail string, notEmail string, hookSlack string
 	}
 	servlog.Printf("Server Listening on port: %s\n---", SERVCONFIG.PORT)
 
-	logClean("./logs/serverlogs/")
-	// logClean("./logs/server-connections/")
+	
 	for {
 		conn, err := l.Accept()
 		if err != nil {
