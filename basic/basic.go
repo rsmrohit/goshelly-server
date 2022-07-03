@@ -272,7 +272,7 @@ func StartServer(port string, sslEmail string, notEmail string, hookSlack string
 	printConfig()
 
 	genCert() // Uncomment if NOT using image.
-	//servlog.Println("Loading SSL Certificates")
+	servlog.Println("Loading SSL Certificates")
 	cert, err := tls.LoadX509KeyPair("certs/server.pem", "certs/server.key")
 
 	if err != nil {
