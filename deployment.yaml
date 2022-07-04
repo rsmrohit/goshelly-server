@@ -15,10 +15,9 @@ spec:
       labels:
         app: goshelly
     spec:
-      #serviceAccountName: nightly-backdoorserv-sa
       containers:
       - name: container-goshelly
-        image: arorasoham9/goshelly:staticSSL
+        image: arorasoham9/goshelly-server:linux
         volumeMounts:
         - name: goshelly-configmap-volume
           mountPath: "/etc/goshelly-configmap-volume"
@@ -29,7 +28,7 @@ spec:
         resources:
           limits:
             memory: 512Mi
-            cpu: "4"
+            cpu: "2"
           requests:
             memory: 256Mi
             cpu: "1"

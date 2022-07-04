@@ -1,11 +1,30 @@
 # syntax=docker/dockerfile:1
+FROM alpine:latest
+# FROM darwinzeng/darwin-container:latest
+WORKDIR /goshelly-server
 
-FROM golang:1.16-alpine
-WORKDIR /app
-COPY . .
-RUN go mod download
-RUN go build -o /goshelly-serv
+COPY basic/* basic/
+COPY bin/* bin/
+COPY cmd/* cmd/
+COPY scripts/* scripts/
+COPY template/* template/
+COPY *.mod /
+COPY *.sum /
+COPY *.go /
+
+
 EXPOSE 443
-SHELL ["/bin/bash", "-c"]
-RUN ["/goshelly-serv" ,"config"]
-CMD [ "/goshelly-serv", "demo" ]
+RUN apk add --no-cache --upgrade bash
+SHELL ["/bin/bash", "-c"] 
+RUN apk add --update openssl && \ 
+    rm -rf /var/cache/apk/*
+
+#for linux image    
+RUN chmod +x ./bin/app-amd64-linux
+RUN [ "./bin/app-amd64-linux", "config"]
+CMD [ "./bin/app-amd64-linux", "demo"]
+
+#for darwin image: BASE IMAGE DNE
+# RUN chmod +x ./bin/app-amd64-darwin
+# RUN [ "./bin/app-amd64-darwin", "config"]
+# CMD [ "./bin/app-amd64-darwin", "demo"]

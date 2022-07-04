@@ -6,7 +6,7 @@ data:
   notemail: all@araalinetworks.com
   mode: DEMO
   slacken: "true"
-  emailen: "true"
+  emailen: "false"
   sslEmail: goshellydemo@araalinetworks.com
   port: "443"
 ---

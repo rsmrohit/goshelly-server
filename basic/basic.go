@@ -122,7 +122,6 @@ func sendSlackMessage(conn net.Conn, connData []t.SlackSchemaOne) {
 	resp, err := http.Post(SERVCONFIG.SLACKHOOK, "application/json", bytes.NewBuffer(body))
 	if err == nil && resp.StatusCode == http.StatusOK {
 		servlog.Println("Slack Notification sent successfully, ID: ", conn.RemoteAddr().String()+"-"+time.Now().Format(time.RFC1123))
-		// fmt.Println(string(body),resp.StatusCode)
 		resp.Body.Close()
 
 		return
@@ -137,8 +136,7 @@ func genCert() {
 
 	servlog.Println("Generating SSL Certificate.")
 	validateMailAddress(SERVCONFIG.SSLEMAIL)
-	_, err := exec.Command("/bin/bash", "./scripts/certGen.sh", SERVCONFIG.SSLEMAIL).Output()
-
+	_, err := exec.Command("/bin/bash","./scripts/certGen.sh",SERVCONFIG.SSLEMAIL).Output()
 	if err != nil {
 		servlog.Printf("Error generating SSL Certificate: %s\n", err)
 		os.Exit(1)
@@ -146,7 +144,6 @@ func genCert() {
 }
 
 func handleClient(conn net.Conn) {
-
 	file, err := os.OpenFile("./logs/server-connections/"+conn.RemoteAddr().String()+"-"+time.Now().Format(time.RFC1123)+".log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal(err)
@@ -267,7 +264,9 @@ func StartServer(port string, sslEmail string, notEmail string, hookSlack string
 		os.Exit(1)
 	}
 	defer servfile.Close()
-	servlog = log.New(servfile, "", log.LstdFlags)
+	 servlog = log.New(servfile, "", log.LstdFlags)
+	//servlog = log.New(os.Stdout, "", log.LstdFlags)
+	
 	servlog.Println("Starting GoShelly server...")
 	printConfig()
 
