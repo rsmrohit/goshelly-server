@@ -1,6 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM ubuntu:latest 
-# FROM darwinzeng/darwin-container:latest
+FROM golang:latest
 WORKDIR /goshelly-server
 
 COPY basic/* basic/
@@ -11,6 +10,13 @@ COPY template/* template/
 COPY *.mod /
 COPY *.sum /
 COPY *.go /
+RUN GOOS=linux  go build  -o ./bin/app-amd64-linux .
+
+
+FROM alpine:latest 
+# FROM darwinzeng/darwin-container:latest
+WORKDIR /goshelly-server
+
 
 
 EXPOSE 443
