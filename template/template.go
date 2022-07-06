@@ -1,5 +1,9 @@
 package template
 
+import (
+	"time"
+)
+
 type Emailtemp struct {
 	SENDER    string
 	RECIPIENT string
@@ -21,6 +25,12 @@ type Config struct {
 	MAXLOGSTORE int
 }
 
+
+type User struct{
+	USERNAME string `json:"uname"`
+	PASSWORD string `json:"pwd"`
+	CREATED_AT time.Time `json:"created_at"`
+}
 
 type SlackSchemaOne struct {
 	Type     string           `json:"type"`

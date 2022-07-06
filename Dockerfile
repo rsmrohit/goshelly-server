@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM alpine:latest
+FROM alpine:latest 
 # FROM darwinzeng/darwin-container:latest
 WORKDIR /goshelly-server
 
@@ -21,8 +21,10 @@ RUN apk add --update openssl && \
 
 #for linux image    
 RUN chmod +x ./bin/app-amd64-linux
-RUN [ "./bin/app-amd64-linux", "config"]
-CMD [ "./bin/app-amd64-linux", "demo"]
+RUN chmod +x ./scripts/certGen.sh
+RUN [ "bin/app-amd64-linux", "config"]
+CMD [ "bin/app-amd64-linux", "demo"]
+
 
 #for darwin image: BASE IMAGE DNE
 # RUN chmod +x ./bin/app-amd64-darwin

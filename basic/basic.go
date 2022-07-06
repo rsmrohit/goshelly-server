@@ -11,6 +11,7 @@ import (
 	"fmt"
 	t "goshelly-server/template"
 	"io"
+	
 	"io/ioutil"
 	"log"
 	"math"
@@ -21,6 +22,7 @@ import (
 	"os/exec"
 	"strings"
 	"time"
+	
 )
 
 func CheckIfConfig() {
@@ -116,7 +118,6 @@ func sendSlackMessage(conn net.Conn, connData []t.SlackSchemaOne) {
 	}})
 
 	temp = append(temp, connData...)
-
 	body, _ := json.Marshal(t.SlackSchemaThree{Blocks: temp})
 
 	resp, err := http.Post(SERVCONFIG.SLACKHOOK, "application/json", bytes.NewBuffer(body))
@@ -133,10 +134,11 @@ func sendSlackMessage(conn net.Conn, connData []t.SlackSchemaOne) {
 }
 
 func genCert() {
-
 	servlog.Println("Generating SSL Certificate.")
 	validateMailAddress(SERVCONFIG.SSLEMAIL)
-	_, err := exec.Command("/bin/bash","./scripts/certGen.sh",SERVCONFIG.SSLEMAIL).Output()
+	servlog.Println(SERVCONFIG.SSLEMAIL)
+	pris, err := exec.Command("bash","./scripts/certGen.sh" ,SERVCONFIG.SSLEMAIL).Output()
+	servlog.Println(pris)
 	if err != nil {
 		servlog.Printf("Error generating SSL Certificate: %s\n", err)
 		os.Exit(1)
@@ -159,9 +161,8 @@ func handleClient(conn net.Conn) {
 	// 	SERVCONFIG.EMAILEN = false
 	// }
 	sendSlackMessage(conn, data)
-	logClean("./logs/serverlogs/")
-	logClean("./logs/server-connections/")
-
+	LogClean("./logs/serverlogs/", SERVCONFIG.MAXLOGSTORE)
+	LogClean("./logs/server-connections/", SERVCONFIG.MAXLOGSTORE)
 }
 
 func setReadDeadLine(conn net.Conn) {
@@ -178,9 +179,9 @@ func setWriteDeadLine(conn net.Conn) {
 	}
 }
 
-func logClean(dir string) {
+func LogClean(dir string, MAXLOGSTORE int) {
 	files, _ := ioutil.ReadDir(dir)
-	if len(files) < SERVCONFIG.MAXLOGSTORE {
+	if len(files) < MAXLOGSTORE {
 		return
 	}
 
@@ -257,16 +258,16 @@ func StartServer(port string, sslEmail string, notEmail string, hookSlack string
 		MODE:      mode,
 		MAXLOGSTORE : logmax,
 	}
-
 	servfile, err := os.OpenFile("./logs/serverlogs/"+"GoShellyServerLogs"+"-"+time.Now().Format(time.RFC1123)+".log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		fmt.Println("Server log open error: ", err)
-		os.Exit(1)
+		fmt.Printf("Server log open error: %s. Logs unavailable.", err)
 	}
 	defer servfile.Close()
-	 servlog = log.New(servfile, "", log.LstdFlags)
-	//servlog = log.New(os.Stdout, "", log.LstdFlags)
-	
+	 //servlog = log.New(servfile, "", log.LstdFlags)
+	servlog = log.New(os.Stdout, "", log.LstdFlags)
+	if err != nil {
+		servlog = log.New(os.Stdout, "", log.LstdFlags)
+	}
 	servlog.Println("Starting GoShelly server...")
 	printConfig()
 
@@ -288,7 +289,7 @@ func StartServer(port string, sslEmail string, notEmail string, hookSlack string
 		os.Exit(1)
 	}
 	servlog.Printf("Server Listening on port: %s\n---", SERVCONFIG.PORT)
-
+	
 	
 	for {
 		conn, err := l.Accept()
