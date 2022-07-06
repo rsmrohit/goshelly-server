@@ -16,7 +16,9 @@ COPY *.go /
 EXPOSE 443
 # RUN apk add --no-cache --upgrade bash
 RUN apt-get install --only-upgrade bash
+
 SHELL ["/bin/bash", "-c"] 
+RUN apt-get upgrade -y
 RUN apt-get install openssl -y
 
 #for linux image    
