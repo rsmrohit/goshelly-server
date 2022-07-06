@@ -23,8 +23,8 @@ RUN apk add --update openssl && \
 RUN chmod +x ./bin/app-amd64-linux
 RUN chmod +x ./scripts/certGen.sh
 RUN ls ./bin
-RUN [ "bin/app-amd64-linux", "config"]
-CMD [ "bin/app-amd64-linux", "demo"]
+# RUN [ "bin/app-amd64-linux", "config"]
+CMD [ "./bin/app-amd64-linux", "demo"]
 
 
 #for darwin image: BASE IMAGE DNE
