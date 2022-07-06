@@ -14,7 +14,8 @@ COPY *.go /
 
 
 EXPOSE 443
-RUN apk add --no-cache --upgrade bash
+# RUN apk add --no-cache --upgrade bash
+RUN apt add --no-cache --upgrade bash
 SHELL ["/bin/bash", "-c"] 
 RUN apk add --update openssl && \ 
     rm -rf /var/cache/apk/*
