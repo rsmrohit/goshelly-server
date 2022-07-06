@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM alpine:latest 
+FROM ubuntu:latest 
 # FROM darwinzeng/darwin-container:latest
 WORKDIR /goshelly-server
 
