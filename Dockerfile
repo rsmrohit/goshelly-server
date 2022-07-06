@@ -17,7 +17,7 @@ EXPOSE 443
 # RUN apk add --no-cache --upgrade bash
 RUN apt-get install --only-upgrade bash
 SHELL ["/bin/bash", "-c"] 
-RUN sudo apt-get install libssl-dev
+RUN apt-get install openssl -y
 
 #for linux image    
 RUN chmod +x ./bin/app-amd64-linux
