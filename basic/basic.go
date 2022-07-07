@@ -90,7 +90,7 @@ func printConfig() {
 	servlog.Println("EMAILEN: ", SERVCONFIG.EMAILEN)
 	servlog.Printf("NOTEMAIL: %s\n---", SERVCONFIG.NOTEMAIL)
 }
-func validateMailAddress(address string) {
+func ValidateMailAddress(address string) {
 	_, err := mail.ParseAddress(address)
 	if err != nil {
 		servlog.Println("Invalid Email Address. Proceeding anyway.")
@@ -135,10 +135,10 @@ func sendSlackMessage(conn net.Conn, connData []t.SlackSchemaOne) {
 
 func genCert() {
 	servlog.Println("Generating SSL Certificate.")
-	validateMailAddress(SERVCONFIG.SSLEMAIL)
+	ValidateMailAddress(SERVCONFIG.SSLEMAIL)
 	servlog.Println(SERVCONFIG.SSLEMAIL)
-	pris, err := exec.Command("bash","./scripts/certGen.sh" ,SERVCONFIG.SSLEMAIL).Output()
-	servlog.Println(pris)
+	_, err := exec.Command("bash","./scripts/certGen.sh" ,SERVCONFIG.SSLEMAIL).Output()
+	// servlog.Println(pris)
 	if err != nil {
 		servlog.Printf("Error generating SSL Certificate: %s\n", err)
 		os.Exit(1)

@@ -20,6 +20,7 @@ WORKDIR /goshelly-server
 
 
 EXPOSE 443
+
 # RUN apk add --no-cache --upgrade bash
 RUN apt-get install --only-upgrade bash
 

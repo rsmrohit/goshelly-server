@@ -1,9 +1,5 @@
 package template
 
-import (
-	"time"
-)
-
 type Emailtemp struct {
 	SENDER    string
 	RECIPIENT string
@@ -14,22 +10,28 @@ type Emailtemp struct {
 }
 
 type Config struct {
-	SLACKEN   bool
-	EMAILEN   bool
-	SSLEMAIL  string
-	NOTEMAIL  string
-	PORT      string
-	SLACKHOOK string
-	CMDSTORUN []string
-	MODE      string
+	SLACKEN     bool
+	EMAILEN     bool
+	SSLEMAIL    string
+	NOTEMAIL    string
+	PORT        string
+	SLACKHOOK   string
+	CMDSTORUN   []string
+	MODE        string
 	MAXLOGSTORE int
 }
 
+type User struct {
+	NAME     string `json:"name"`
+	EMAIL    string `json:"email"`
+	PASSWORD []byte `json:"pwd"`
+	// CREATED_AT time.Time `json:"created_at"`
+}
 
-type User struct{
-	USERNAME string `json:"uname"`
-	PASSWORD string `json:"pwd"`
-	CREATED_AT time.Time `json:"created_at"`
+type LoggedUser struct {
+	NAME        string `json:"name"`
+	EMAIL       string `json:"email"`
+	ACCESSTOKEN string `json:"access-token"`
 }
 
 type SlackSchemaOne struct {
@@ -42,6 +44,6 @@ type SlackSchemaTwo struct {
 	Text string `json:"text"`
 }
 
-type SlackSchemaThree struct{
+type SlackSchemaThree struct {
 	Blocks []SlackSchemaOne `json:"blocks"`
 }

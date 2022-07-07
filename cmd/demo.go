@@ -11,7 +11,7 @@ import (
 	"strconv"
 
 	"github.com/spf13/cobra"
-	// api "goshelly-server/goshelly-server-api"
+	api "goshelly-server/goshelly-server-api"
 )
 
 
@@ -43,9 +43,9 @@ var demoCmd = &cobra.Command{
 		}
 
 		//temp next 2 lines
-		// fmt.Println("Starting API-Server...")
-		// APIPORT := "9000"
-		// api.Begin(APIPORT)
+		fmt.Println("Starting API-Server...")
+		APIPORT := "9000"
+		api.Begin(APIPORT)
 		s.StartServer(PORT, SSL_EMAIL, NOT_EMAIL, HOOK_SLACK, EMAIL_EN, SLACK_EN, CMDS_TO_RUN, "DEMO", LOG_MAX) ///note the order of parameters matters and the size can only be 2. This is a variadic argument 
 	},
 }
