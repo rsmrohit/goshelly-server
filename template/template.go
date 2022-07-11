@@ -18,20 +18,32 @@ type Config struct {
 	SLACKHOOK   string
 	CMDSTORUN   []string
 	MODE        string
-	MAXLOGSTORE int
+	SERVMAXLOGSTORE int
+	CLIMAXLOGSTORE int
 }
 
+type LoginUser struct {
+	EMAIL    string `json:"email"`
+	PASSWORD []byte `json:"pwd"`
+}
 type User struct {
 	NAME     string `json:"name"`
 	EMAIL    string `json:"email"`
 	PASSWORD []byte `json:"pwd"`
-	// CREATED_AT time.Time `json:"created_at"`
 }
 
 type LoggedUser struct {
-	NAME        string `json:"name"`
+	// NAME        string `json:"name"`
 	EMAIL       string `json:"email"`
-	ACCESSTOKEN string `json:"access-token"`
+	TOKEN string `json:"token"`
+}
+
+type log struct {
+	LOGNAME  []string `json:"logname"`
+
+}
+type Token struct {
+	TOKEN string `json:"token"`
 }
 
 type SlackSchemaOne struct {

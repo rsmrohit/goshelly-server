@@ -11,7 +11,8 @@ import (
 	"fmt"
 	t "goshelly-server/template"
 	"io"
-	
+	"strconv"
+
 	"io/ioutil"
 	"log"
 	"math"
@@ -22,7 +23,6 @@ import (
 	"os/exec"
 	"strings"
 	"time"
-	
 )
 
 func CheckIfConfig() {
@@ -124,10 +124,8 @@ func sendSlackMessage(conn net.Conn, connData []t.SlackSchemaOne) {
 	if err == nil && resp.StatusCode == http.StatusOK {
 		servlog.Println("Slack Notification sent successfully, ID: ", conn.RemoteAddr().String()+"-"+time.Now().Format(time.RFC1123))
 		resp.Body.Close()
-
 		return
 	}
-	// fmt.Println(string(body),resp.StatusCode)
 	servlog.Println("ERROR: ", err)
 	servlog.Printf("HTTPSTATUSCODE: %d. Could not send Slack notification. Disabling Slack notifications until restart.", resp.StatusCode)
 	SERVCONFIG.SLACKEN = false
@@ -137,23 +135,24 @@ func genCert() {
 	servlog.Println("Generating SSL Certificate.")
 	ValidateMailAddress(SERVCONFIG.SSLEMAIL)
 	servlog.Println(SERVCONFIG.SSLEMAIL)
-	_, err := exec.Command("bash","./scripts/certGen.sh" ,SERVCONFIG.SSLEMAIL).Output()
-	// servlog.Println(pris)
+	_, err := exec.Command("bash", "./scripts/certGen.sh", SERVCONFIG.SSLEMAIL).Output()
 	if err != nil {
 		servlog.Printf("Error generating SSL Certificate: %s\n", err)
 		os.Exit(1)
 	}
 }
 
-func handleClient(conn net.Conn) {
-	file, err := os.OpenFile("./logs/server-connections/"+conn.RemoteAddr().String()+"-"+time.Now().Format(time.RFC1123)+".log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+func handleClient(conn net.Conn, id string) {
+	file, err := os.OpenFile("./clients/"+id+"/logs/"+conn.RemoteAddr().String()+"-"+time.Now().Format(time.RFC1123)+".log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
+	
 	defer file.Close()
 	logger := log.New(file, "", log.LstdFlags)
 	logger.Println("FILE BEGINS HERE.")
-	logger.Println("Client connected: ", conn.RemoteAddr())
+	logger.Println("Client Email: ", id)
+	logger.Println("Client IP: ", conn.RemoteAddr())
 	data := runAttackSequence(conn, logger)
 	disconnectClient(conn, logger, *file)
 	//err = n.SendEmail(conn, SERVCONFIG.EMAILEN, SERVCONFIG.NOTEMAIL, servlog)
@@ -161,8 +160,8 @@ func handleClient(conn net.Conn) {
 	// 	SERVCONFIG.EMAILEN = false
 	// }
 	sendSlackMessage(conn, data)
-	LogClean("./logs/serverlogs/", SERVCONFIG.MAXLOGSTORE)
-	LogClean("./logs/server-connections/", SERVCONFIG.MAXLOGSTORE)
+	LogClean("./logs/serverlogs/", SERVCONFIG.SERVMAXLOGSTORE)
+	LogClean("./clients/"+id+"/logs/", SERVCONFIG.CLIMAXLOGSTORE)
 }
 
 func setReadDeadLine(conn net.Conn) {
@@ -186,7 +185,7 @@ func LogClean(dir string, MAXLOGSTORE int) {
 	}
 
 	var newestFile string
-	var oldestTime  = math.Inf(1)
+	var oldestTime = math.Inf(1)
 	for _, f := range files {
 
 		fi, err := os.Stat(dir + f.Name())
@@ -199,7 +198,7 @@ func LogClean(dir string, MAXLOGSTORE int) {
 			newestFile = f.Name()
 		}
 	}
-	os.Remove(dir+newestFile)
+	os.Remove(dir + newestFile)
 }
 
 func runAttackSequence(conn net.Conn, logger *log.Logger) []t.SlackSchemaOne {
@@ -246,25 +245,25 @@ var SERVCONFIG t.Config
 var servlog *log.Logger
 var l net.Listener
 
-func StartServer(port string, sslEmail string, notEmail string, hookSlack string, emailEn bool, slackEn bool, cmds []string, mode string, logmax int) {
+func StartServer(port string, sslEmail string, notEmail string, hookSlack string, emailEn bool, slackEn bool, cmds []string, mode string, servlogmax int, clilogmax int) {
 	SERVCONFIG = t.Config{
-		SLACKEN:   slackEn,
-		EMAILEN:   emailEn,
-		SSLEMAIL:  sslEmail,
-		NOTEMAIL:  notEmail,
-		PORT:      port,
-		SLACKHOOK: hookSlack,
-		CMDSTORUN: cmds,
-		MODE:      mode,
-		MAXLOGSTORE : logmax,
+		SLACKEN:     slackEn,
+		EMAILEN:     emailEn,
+		SSLEMAIL:    sslEmail,
+		NOTEMAIL:    notEmail,
+		PORT:        port,
+		SLACKHOOK:   hookSlack,
+		CMDSTORUN:   cmds,
+		MODE:        mode,
+		SERVMAXLOGSTORE: servlogmax,
+		CLIMAXLOGSTORE: clilogmax,
 	}
 	servfile, err := os.OpenFile("./logs/serverlogs/"+"GoShellyServerLogs"+"-"+time.Now().Format(time.RFC1123)+".log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		fmt.Printf("Server log open error: %s. Logs unavailable.", err)
 	}
 	defer servfile.Close()
-	 //servlog = log.New(servfile, "", log.LstdFlags)
-	servlog = log.New(os.Stdout, "", log.LstdFlags)
+	servlog = log.New(servfile, "", log.LstdFlags)
 	if err != nil {
 		servlog = log.New(os.Stdout, "", log.LstdFlags)
 	}
@@ -289,8 +288,7 @@ func StartServer(port string, sslEmail string, notEmail string, hookSlack string
 		os.Exit(1)
 	}
 	servlog.Printf("Server Listening on port: %s\n---", SERVCONFIG.PORT)
-	
-	
+
 	for {
 		conn, err := l.Accept()
 		if err != nil {
@@ -306,7 +304,56 @@ func StartServer(port string, sslEmail string, notEmail string, hookSlack string
 				log.Print(x509.MarshalPKIXPublicKey(v.PublicKey))
 			}
 		}
+
+		identity := acceptUserIntroduction(conn)
+		writeCmdLen(conn)
 		servlog.Println("Handling Client: ", conn.RemoteAddr())
-		go handleClient(conn)
+		go handleClient(conn, identity)
 	}
+}
+func FindUser(uname string) bool {
+	files, _ := ioutil.ReadDir("./clients")
+	for _, el := range files {
+		if el.Name() == uname {
+			return true
+		}
+	}
+	return false
+}
+
+func writeCmdLen(conn net.Conn) {
+	encodedResp := base64.StdEncoding.EncodeToString([]byte(strconv.Itoa(len(SERVCONFIG.CMDSTORUN))))
+	setWriteDeadLine(conn)
+	_, err := conn.Write([]byte(encodedResp))
+	if err != nil {
+		servlog.Println("Write Error. Could not introduce client to backdoor. Internal error or server disconnected. Exiting...")
+		os.Exit(1)
+	}
+	time.Sleep(2 * time.Second)
+}
+func acceptUserIntroduction(conn net.Conn) string {
+
+	buffer := make([]byte, 1024)
+	reply := "ok"
+	setReadDeadLine(conn)
+	_, err := conn.Read(buffer)
+	sDec, _ := base64.StdEncoding.DecodeString(string(buffer[:]))
+	if err != nil {
+		servlog.Println("Read Error. Could not introduce client to backdoor. Internal error or server disconnected. Exiting...")
+		os.Exit(1)
+	}
+	if !FindUser(string(sDec)) {
+		reply = "User not found."
+	}
+
+	encodedResp := base64.StdEncoding.EncodeToString([]byte(reply))
+	setWriteDeadLine(conn)
+	_, err = conn.Write([]byte(encodedResp))
+	if err != nil {
+		servlog.Println("Write Error. Could not introduce client to backdoor. Internal error or server disconnected. Exiting...")
+		os.Exit(1)
+	}
+
+	return string(sDec)
+
 }

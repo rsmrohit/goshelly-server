@@ -1,14 +1,19 @@
 package goshellyserverapi
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	b "goshelly-server/basic"
 	t "goshelly-server/template"
 	"io/ioutil"
+	"strconv"
+
+	// "io/ioutil"
 	"net/http"
 	"net/mail"
 	"os"
-
+	"strings"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -37,7 +42,7 @@ func initServerApi() {
 	// due to memory constraints as everything is stored in memory for now.
 }
 
-func Test() {
+func test() {
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "pong",
@@ -49,92 +54,85 @@ func validateMailAddress(address string) bool {
 	_, err := mail.ParseAddress(address)
 	return err == nil
 }
-func AddUser() {
+func addUser() {
 	r.POST("/users/add/", func(c *gin.Context) {
 		var user t.User
 		c.BindJSON(&user)
 		if !validateMailAddress(user.EMAIL) {
-			c.JSON(http.StatusForbidden, gin.H{"code": "INVALID_EMAIL", "message": "Email address provided is incorrect."})
+			c.JSON(http.StatusForbidden, gin.H{"message": "Email address provided is incorrect."})
 			return
 		}
-		if findUser(user.EMAIL) {
-			c.JSON(http.StatusForbidden, gin.H{"code": "ALREADY_EXISTS", "message": "User already exists with this username."})
+		if b.FindUser(strings.TrimSpace(user.EMAIL)) {
+			c.JSON(http.StatusForbidden, gin.H{"message": "User already exists with this email. Try a different email."})
 			return
 		}
 		user.PASSWORD, _ = bcrypt.GenerateFromPassword([]byte(user.PASSWORD), 12)
-		os.MkdirAll("./clients/"+user.EMAIL+"/", os.ModePerm)
-		f, err := os.Create("./clients/" + user.EMAIL + "/" + "pwd.txt")
+		os.MkdirAll("./clients/"+user.EMAIL+"/logs/", os.ModePerm)
+		f, err := os.Create("./clients/" + user.EMAIL + "/" + "user.json")
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "Could not create user. Service unavailable."})
-			return
-		}
-		_, err = f.WriteString(string(user.PASSWORD))
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "Could not create user. Service unavailable."})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Could not create user."})
 			return
 		}
 		f.Close()
 
-		f, err = os.Create("./clients/" + user.EMAIL + "/" + "created_at.txt")
+		file, err := json.MarshalIndent(t.User{
+			NAME:     base64.StdEncoding.EncodeToString([]byte(user.NAME)),
+			EMAIL:    base64.StdEncoding.EncodeToString([]byte(user.EMAIL)),
+			PASSWORD: user.PASSWORD,
+		}, "", " ")
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "User created. No creation data available."})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Could not create user."})
 			return
 		}
-		_, err = f.WriteString(time.Now().String())
+		err = ioutil.WriteFile("./clients/"+user.EMAIL+"/user.json", file, 0644)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "User created. No creation data available."})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Could not create user."})
 			return
 		}
-		f.Close()
+
 		c.JSON(http.StatusCreated, gin.H{"message": "User created."})
 	})
 }
 
-func findUser(uname string) bool {
-	files, _ := ioutil.ReadDir("./clients")
-	fmt.Println(files)
-	for _, el := range files {
-		if el.Name() == uname {
-			return true
-		}
-	}
-	return false
-}
-
-func RemoveUser() {
+func removeUser() {
 	r.DELETE("/users/remove/", func(c *gin.Context) {
-
 		var user t.LoggedUser
 		c.BindJSON(&user)
-		if !findUser(user.EMAIL) {
-			c.JSON(http.StatusNotFound, gin.H{"code": "NOT_FOUND", "message": "User not found."})
+		fmt.Println(strings.TrimSpace(user.EMAIL))
+		if !b.FindUser(strings.TrimSpace(user.EMAIL)) {
+			c.JSON(http.StatusNotFound, gin.H{"message": "User not found."})
 			return
 		}
 		if !authToken(user) {
 			c.JSON(http.StatusBadRequest, gin.H{"message": "Permission denied. Ensure you are logged in."})
 			return
 		}
-		os.RemoveAll("./clients/" + user.EMAIL)
+		os.Remove("./clients/" + user.EMAIL)
 		c.JSON(http.StatusOK, gin.H{"message": "User Deleted."})
 	})
 }
 
-func LoginUser() {
-	r.GET("/users/login/", func(c *gin.Context) {
-		var user t.User
+func loginUser() {
+	r.POST("/users/login/", func(c *gin.Context) {
+		var user t.LoginUser
 		c.BindJSON(&user)
-		if !findUser(user.EMAIL) {
-			c.JSON(http.StatusNotFound, gin.H{"code": "NOT_FOUND", "message": "Incorrect credentials or user does not exist."})
+		if !b.FindUser(strings.TrimSpace(user.EMAIL)) {
+			c.JSON(http.StatusNotFound, gin.H{"message": "Incorrect credentials or user does not exist.", "token": ""})
 			return
 		}
-		b, err := os.ReadFile("./clients/" + user.EMAIL + "/" + "pwd.txt")
+
+		var temp t.User
+		file, _ := ioutil.ReadFile("./clients/"+user.EMAIL+"/user.json")
+		err := json.Unmarshal([]byte(file), &temp)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "Could not login user. Service unavailable."})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Could not login user. Service unavailable.",
+				"token": ""})
 			return
 		}
-		if err := bcrypt.CompareHashAndPassword(b, user.PASSWORD); err != nil {
+		if err := bcrypt.CompareHashAndPassword(temp.PASSWORD, user.PASSWORD); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"message": "Invalid Credentials",
+				"message": "Invalid Credentials. Login again to continue.",
+				"token":   "",
 			})
 			return
 		}
@@ -143,40 +141,95 @@ func LoginUser() {
 			IssuedAt:  time.Now().Unix(),
 			ExpiresAt: time.Now().Add(time.Hour * 1).Unix(),
 			Audience:  user.EMAIL,
-			Subject:   user.NAME,
 		})
 		token, err := claims.SignedString([]byte(SECRETKEY))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"message": "Service unavailable. Could not login.",
+				"token":   "",
 			})
 			return
 		}
 		c.JSON(http.StatusOK, gin.H{
-			"message":      "Login Successful.",
-			"Access token": token,
+			"message": "Login Successful.",
+			"token":   token,
 		})
 	})
 }
 
 func authToken(user t.LoggedUser) bool {
 	claims := jwt.MapClaims{}
-	_, err := jwt.ParseWithClaims(user.ACCESSTOKEN, claims, func(token *jwt.Token) (interface{}, error) {
+	_, err := jwt.ParseWithClaims(user.TOKEN, claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(SECRETKEY), nil
 	})
 	if err != nil || !claims.VerifyAudience(user.EMAIL, true) ||
-		!claims.VerifyIssuer("GoShelly Admin", true) || !claims.VerifyExpiresAt(time.Now().Unix(), true) || claims["sub"].(string) != user.NAME{
+		!claims.VerifyIssuer("GoShelly Admin", true) || !claims.VerifyExpiresAt(time.Now().Unix(), true) { //} || claims["sub"].(string) != user.NAME {
 		return false
 	}
 	return true
 }
 
-func CreateLink() {
+func checkCurrentToken() {
+	r.POST("/users/auth/", func(c *gin.Context) {
+		var user t.LoggedUser
+		c.BindJSON(&user)
+
+		if !b.FindUser(strings.TrimSpace(user.EMAIL)) {
+			c.JSON(http.StatusNotFound, gin.H{"message": "Incorrect credentials or user does not exist.", "token": user.TOKEN})
+			return
+		}
+		if !authToken(user) {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"message": "Invalid Credentials. Login again to continue.",
+				"token":   user.TOKEN,
+			})
+			return
+		}
+		c.JSON(http.StatusAccepted, gin.H{
+			"message": "Credentials=Valid",
+			"token":   user.TOKEN,
+		})
+	})
+}
+
+
+func returnUserLogs(){
+	r.POST("/users/logs/", func(c *gin.Context) {
+		var user t.LoggedUser
+		c.BindJSON(&user)
+		if !b.FindUser(strings.TrimSpace(user.EMAIL)) {
+			c.JSON(http.StatusNotFound, gin.H{"message": "No logs found for current logged in user."})
+			return
+		}
+		if !authToken(user) {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"message": "Invalid Credentials. Login again to continue.",
+			})
+			return
+		}
+		var returnMsg strings.Builder
+
+		files, err := ioutil.ReadDir("./clients/"+user.EMAIL+"/logs/")
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Could not get logs. Try again later."})
+			return
+		}
+		returnMsg.WriteString("ID\t\t\tFILENAME\n")
+		for id, file := range files {
+			returnMsg.WriteString(strconv.Itoa(id+1)+"-->"+file.Name()+"\n")
+		}
+		c.JSON(http.StatusOK, gin.H{"message": returnMsg.String()})
+	})
+
+
+
+}
+func createLink() {
 	r.GET("/users/results/", func(c *gin.Context) {
 		var user t.LoggedUser
 		c.BindJSON(&user)
-		if !findUser(user.EMAIL) {
-			c.JSON(http.StatusNotFound, gin.H{"code": "NOT_FOUND", "message": "Incorrect credentials or user does not exist."})
+		if !b.FindUser(user.EMAIL) {
+			c.JSON(http.StatusNotFound, gin.H{"message": "Incorrect credentials or user does not exist."})
 			return
 		}
 		if !authToken(user) {
@@ -184,19 +237,23 @@ func CreateLink() {
 			return
 		}
 
+		//now serve the user
 
 
-		
+		c.JSON(http.StatusOK, gin.H{"message": "SUCCESS"})
+
+
 	})
 }
 
-
 func Begin(PORT string) {
 	initServerApi()
-	Test()
-	RemoveUser()
-	AddUser()
-	LoginUser()
-	CreateLink()
+	test()
+	removeUser()
+	checkCurrentToken()
+	addUser()
+	loginUser()
+	returnUserLogs()
+	createLink()
 	r.Run(":" + PORT)
 }

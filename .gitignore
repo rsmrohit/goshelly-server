@@ -1,6 +1,7 @@
 certs/
 logs/
 aws/
+clients/
 *.yaml
 Dockerfile
 LICENSE
