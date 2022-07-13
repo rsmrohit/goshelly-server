@@ -14,61 +14,27 @@ RUN GOOS=linux  go build  -o ./bin/app-amd64-linux .
 RUN ls ./bin
 
 FROM ubuntu:latest as base
-# FROM darwinzeng/darwin-container:latest
+
 
 COPY --from=layer1 /goshelly-server /goshelly-server
 EXPOSE 443
+EXPOSE 8000
+EXPOSE 9000
+
 WORKDIR /goshelly-server
 RUN ls ./bin
 # RUN apk add --no-cache --upgrade bash
+RUN apt-get install --only-upgrade bash
 
+SHELL ["/bin/bash", "-c"]
+RUN apt-get update -y
+RUN apt-get install openssl -y
 
-azureuser@intern-sa:~/goshelly-server$ ls
-Dockerfile  aws    certs        deployment.yaml  goshelly-server-api  scripts
-LICENSE     basic  cmd          go.mod           logs                 template
-README.md   bin    config.yaml  go.sum           main.go
-azureuser@intern-sa:~/goshelly-server$ vim Dockerfile 
+#for linux image    
+RUN chmod +x ./bin/app-amd64-linux
+RUN chmod +x ./scripts/certGen.sh
+RUN ls -altr ./bin
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# syntax=docker/dockerfile:1
-FROM golang:latest as layer1
-WORKDIR /goshelly-server
-
-COPY basic/* basic/
-COPY bin/* bin/
-COPY cmd/* cmd/
-COPY scripts/* scripts/
-COPY template/* template/
-COPY *.mod .
-COPY *.sum .
-COPY *.go .
-RUN GOOS=linux  go build  -o ./bin/app-amd64-linux .
-RUN ls ./bin
-
-FROM ubuntu:latest as base
-# FROM darwinzeng/darwin-container:latest
-
-COPY --from=layer1 /goshelly-server /goshelly-server
-EXPOSE 443
-WORKDIR /goshelly-server
-RUN ls ./bin
-# RUN apk add --no-cache --upgrade bash
-                                                              17,32         Top
-
+# RUN ./bin/app-amd64-linux config
+RUN chmod +x  ./scripts/goshelly-run-start.sh
+CMD [ "./scripts/goshelly-run-start.sh"]
