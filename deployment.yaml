@@ -56,3 +56,11 @@ spec:
       # nodePort: 32123
       port: 443
       targetPort: 443
+    - name: "api-port1"
+      # nodePort: 32123
+      port: 9000
+      targetPort: 9000
+    - name: "api-port2"
+      # nodePort: 32123
+      port: 8000
+      targetPort: 8000
