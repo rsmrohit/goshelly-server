@@ -10,7 +10,7 @@ COPY template/* template/
 COPY *.mod .
 COPY *.sum .
 COPY *.go .
-COPY *.yaml .
+COPY *.yaml ./
 COPY html/* html/
 COPY Dockerfile .
 
