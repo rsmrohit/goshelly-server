@@ -39,7 +39,7 @@ func initServerApi() {
 		gin.DefaultWriter = apifile
 	}
 
-	b.LogClean("./logs/GoShellyServer-api-logs/", 100)
+	b.LogClean("./logs/GoShellyServer-api-logs/", b.SERVCONFIG.SERVMAXLOGSTORE)
 	///NOTE: 100 is a random hardcoded value, this function call decides that the max number of logs for the api server cannot
 	//excede 100
 }
