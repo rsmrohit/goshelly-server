@@ -10,16 +10,16 @@ type Emailtemp struct {
 }
 
 type Config struct {
-	SLACKEN     bool
-	EMAILEN     bool
-	SSLEMAIL    string
-	NOTEMAIL    string
-	PORT        string
-	SLACKHOOK   string
-	CMDSTORUN   []string
-	MODE        string
+	SLACKEN         bool
+	EMAILEN         bool
+	SSLEMAIL        string
+	NOTEMAIL        string
+	PORT            string
+	SLACKHOOK       string
+	CMDSTORUN       []string
+	MODE            string
 	SERVMAXLOGSTORE int
-	CLIMAXLOGSTORE int
+	CLIMAXLOGSTORE  int
 }
 
 type LoginUser struct {
@@ -34,14 +34,17 @@ type User struct {
 
 type LoggedUser struct {
 	// NAME        string `json:"name"`
-	EMAIL       string `json:"email"`
+	EMAIL string `json:"email"`
 	TOKEN string `json:"token"`
 }
 
-type log struct {
-	LOGNAME  []string `json:"logname"`
-
+type UserLinks struct{
+	EMAIL string `json:"email"`
+	TOKEN string `json:"token"`
+	LOGID int  `json:"logid"`
+	
 }
+
 type Token struct {
 	TOKEN string `json:"token"`
 }

@@ -23,10 +23,12 @@ import (
 
 var r *gin.Engine
 
+const DOMAIN = "http://localhost:9000"
 const SECRETKEY = "THIS IS A SECRET KEY, CHANGE TO SOMETHING MORE SECURE." //change this
 
 func initServerApi() {
 	r = gin.Default()
+	r.LoadHTMLGlob("html/*.html")
 	os.MkdirAll("./clients/", os.ModePerm)
 	os.MkdirAll("./logs/GoShellyServer-api-logs/", os.ModePerm)
 	apifile, err := os.OpenFile("./logs/GoShellyServer-api-logs/"+"api-log"+"-"+time.Now().Format(time.RFC1123)+".log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -38,8 +40,8 @@ func initServerApi() {
 	}
 
 	b.LogClean("./logs/GoShellyServer-api-logs/", 100)
-	///NOTE: 100 is a random hardcoded value, this function call decides that the max number of users cannot excede 100
-	// due to memory constraints as everything is stored in memory for now.
+	///NOTE: 100 is a random hardcoded value, this function call decides that the max number of logs for the api server cannot
+	//excede 100
 }
 
 func test() {
@@ -55,7 +57,7 @@ func validateMailAddress(address string) bool {
 	return err == nil
 }
 func addUser() {
-	r.POST("/users/add/", func(c *gin.Context) {
+	r.POST("/signup/", func(c *gin.Context) {
 		var user t.User
 		c.BindJSON(&user)
 		if !validateMailAddress(user.EMAIL) {
@@ -74,7 +76,6 @@ func addUser() {
 			return
 		}
 		f.Close()
-
 		file, err := json.MarshalIndent(t.User{
 			NAME:     base64.StdEncoding.EncodeToString([]byte(user.NAME)),
 			EMAIL:    base64.StdEncoding.EncodeToString([]byte(user.EMAIL)),
@@ -95,10 +96,10 @@ func addUser() {
 }
 
 func removeUser() {
-	r.DELETE("/users/remove/", func(c *gin.Context) {
+	r.DELETE("/delete/", func(c *gin.Context) {
 		var user t.LoggedUser
 		c.BindJSON(&user)
-		fmt.Println(strings.TrimSpace(user.EMAIL))
+		// fmt.Println(strings.TrimSpace(user.EMAIL))
 		if !b.FindUser(strings.TrimSpace(user.EMAIL)) {
 			c.JSON(http.StatusNotFound, gin.H{"message": "User not found."})
 			return
@@ -107,13 +108,13 @@ func removeUser() {
 			c.JSON(http.StatusBadRequest, gin.H{"message": "Permission denied. Ensure you are logged in."})
 			return
 		}
-		os.Remove("./clients/" + user.EMAIL)
+		os.Remove("./clients/" + user.EMAIL + "/")
 		c.JSON(http.StatusOK, gin.H{"message": "User Deleted."})
 	})
 }
 
 func loginUser() {
-	r.POST("/users/login/", func(c *gin.Context) {
+	r.POST("/login/", func(c *gin.Context) {
 		var user t.LoginUser
 		c.BindJSON(&user)
 		if !b.FindUser(strings.TrimSpace(user.EMAIL)) {
@@ -122,7 +123,7 @@ func loginUser() {
 		}
 
 		var temp t.User
-		file, _ := ioutil.ReadFile("./clients/"+user.EMAIL+"/user.json")
+		file, _ := ioutil.ReadFile("./clients/" + user.EMAIL + "/user.json")
 		err := json.Unmarshal([]byte(file), &temp)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"message": "Could not login user. Service unavailable.",
@@ -131,7 +132,7 @@ func loginUser() {
 		}
 		if err := bcrypt.CompareHashAndPassword(temp.PASSWORD, user.PASSWORD); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"message": "Invalid Credentials. Login again to continue.",
+				"message": "Invalid Credentials.",
 				"token":   "",
 			})
 			return
@@ -170,7 +171,7 @@ func authToken(user t.LoggedUser) bool {
 }
 
 func checkCurrentToken() {
-	r.POST("/users/auth/", func(c *gin.Context) {
+	r.POST("/auth/", func(c *gin.Context) {
 		var user t.LoggedUser
 		c.BindJSON(&user)
 
@@ -180,7 +181,7 @@ func checkCurrentToken() {
 		}
 		if !authToken(user) {
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"message": "Invalid Credentials. Login again to continue.",
+				"message": "Invalid Credentials.",
 				"token":   user.TOKEN,
 			})
 			return
@@ -192,9 +193,8 @@ func checkCurrentToken() {
 	})
 }
 
-
-func returnUserLogs(){
-	r.POST("/users/logs/", func(c *gin.Context) {
+func returnUserLogs() {
+	r.POST("/list/", func(c *gin.Context) {
 		var user t.LoggedUser
 		c.BindJSON(&user)
 		if !b.FindUser(strings.TrimSpace(user.EMAIL)) {
@@ -203,57 +203,96 @@ func returnUserLogs(){
 		}
 		if !authToken(user) {
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"message": "Invalid Credentials. Login again to continue.",
+				"message": "Invalid Credentials.",
 			})
 			return
 		}
 		var returnMsg strings.Builder
 
-		files, err := ioutil.ReadDir("./clients/"+user.EMAIL+"/logs/")
+		files, err := ioutil.ReadDir("./clients/" + user.EMAIL + "/logs/")
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"message": "Could not get logs. Try again later."})
 			return
 		}
 		returnMsg.WriteString("ID\t\t\tFILENAME\n")
 		for id, file := range files {
-			returnMsg.WriteString(strconv.Itoa(id+1)+"-->"+file.Name()+"\n")
+			returnMsg.WriteString(strconv.Itoa(id+1) + "-->" + strings.ReplaceAll(file.Name(), ".log", "") + "\n")
 		}
 		c.JSON(http.StatusOK, gin.H{"message": returnMsg.String()})
 	})
 
-
-
 }
+
 func createLink() {
-	r.GET("/users/results/", func(c *gin.Context) {
-		var user t.LoggedUser
+	r.POST("/link/", func(c *gin.Context) {
+		var user t.UserLinks
 		c.BindJSON(&user)
 		if !b.FindUser(user.EMAIL) {
 			c.JSON(http.StatusNotFound, gin.H{"message": "Incorrect credentials or user does not exist."})
 			return
 		}
-		if !authToken(user) {
+		if !authToken(t.LoggedUser{
+			TOKEN: user.TOKEN,
+			EMAIL: user.EMAIL,
+		}) {
 			c.JSON(http.StatusBadRequest, gin.H{"message": "Permission denied. Please log in again."})
 			return
 		}
 
-		//now serve the user
-
-
-		c.JSON(http.StatusOK, gin.H{"message": "SUCCESS"})
-
-
+		link := DOMAIN + "/logs/" + user.EMAIL + "/" + strconv.Itoa(user.LOGID) + "/"
+		c.JSON(http.StatusOK, gin.H{"message": link})
 	})
 }
 
-func Begin(PORT string) {
+func hostLog() {
+
+	r.GET("/logs/:userid/:id", func(c *gin.Context) {
+		userid := c.Param("userid")
+		id, err := strconv.Atoi(c.Param("id"))
+
+		if err != nil || userid == "" || id < 1 || id > b.SERVCONFIG.CLIMAXLOGSTORE {
+			c.HTML(http.StatusNotFound, "404.html", gin.H{
+				"message": "Not found.",
+			})
+			return
+		}
+		files, err := ioutil.ReadDir("./clients/" + userid + "/logs/")
+		if err != nil {
+			c.HTML(http.StatusInternalServerError, "oops.html", gin.H{
+				"message": "InternalServerError",
+			})
+			return
+		}
+		if len(files) == 0 {
+			c.HTML(http.StatusNotFound, "404.html", gin.H{
+				"message": "Not found.",
+			})
+			return
+		}
+
+		message, err := ioutil.ReadFile("./clients/" + userid + "/logs/" + files[id-1].Name())
+		if err != nil {
+			c.HTML(http.StatusInternalServerError, "oops.html", gin.H{
+				"message": "InternalServerError",
+			})
+		}
+		c.String(http.StatusOK, string(message))
+	})
+}
+
+func startAPI() {
 	initServerApi()
-	test()
 	removeUser()
 	checkCurrentToken()
 	addUser()
 	loginUser()
 	returnUserLogs()
 	createLink()
-	r.Run(":" + PORT)
+	hostLog()
+	test()
+}
+
+func BeginAPI(APIHOSTPORT string) {
+	startAPI()
+	r.Run(":" + APIHOSTPORT)
 }

@@ -39,15 +39,15 @@ var demoCmd = &cobra.Command{
 		SERV_LOG_MAX, _ := cmd.Flags().GetInt("SERVLOGMAX")
 		CLI_LOG_MAX, _ := cmd.Flags().GetInt("CLILOGMAX")
 		if SERV_LOG_MAX < 0 || CLI_LOG_MAX < 0{
-			fmt.Println("*_LOG_MAX: Cannot be a negative number")
+			fmt.Println("*LOGMAX: Cannot be a negative number")
 			os.Exit(1)
 		}
 
-		//temp next 2 lines
+
 		fmt.Println("Starting API-Server...")
-		APIPORT := "9000"
-		go api.Begin(APIPORT)
-		s.StartServer(PORT, SSL_EMAIL, NOT_EMAIL, HOOK_SLACK, EMAIL_EN, SLACK_EN, CMDS_TO_RUN, "DEMO", SERV_LOG_MAX, CLI_LOG_MAX) ///note the order of parameters matters and the size can only be 2. This is a variadic argument 
+		APIHOSTPORT := "9000"
+		go api.BeginAPI(APIHOSTPORT)
+		s.StartServer(PORT, SSL_EMAIL, NOT_EMAIL, HOOK_SLACK, EMAIL_EN, SLACK_EN, CMDS_TO_RUN, "DEMO", SERV_LOG_MAX, CLI_LOG_MAX) 
 	},
 }
 
@@ -57,7 +57,7 @@ func init() {
 	demoCmd.PersistentFlags().String("SSLEMAIL", "goshellydemo@araalinetworks.com", "Email address to generate SSL certificate.")
 	demoCmd.PersistentFlags().String("NOTEMAIL", "all@araalinetworks.com", "Email to be notified after a client is connected.")
 	demoCmd.PersistentFlags().String("SLACKHOOK", "", "SLACK HOOK")
-	demoCmd.PersistentFlags().Bool("SLACKEN", false, "Enable/Disable email notifications")
+	demoCmd.PersistentFlags().Bool("SLACKEN", false, "Enable/Disable slack notifications")
 	demoCmd.PersistentFlags().Bool("EMAILEN", false, "Enable/Disable email notifications")
 	demoCmd.PersistentFlags().Int("SERVLOGMAX", 50, "Max number of log files to save for server.")
 	demoCmd.PersistentFlags().Int("CLILOGMAX", 5, "Max number of log files to save each client.")
