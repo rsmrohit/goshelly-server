@@ -10,6 +10,11 @@ COPY template/* template/
 COPY *.mod .
 COPY *.sum .
 COPY *.go .
+COPY *.yaml .
+COPY html/* html/
+COPY Dockerfile .
+
+COPY goshelly-server-api/* goshelly-server-api/
 RUN GOOS=linux  go build  -o ./bin/app-amd64-linux .
 RUN ls ./bin
 
