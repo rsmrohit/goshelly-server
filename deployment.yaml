@@ -49,7 +49,6 @@ metadata:
 spec:
   # Make the service externally visible via the node
   type: LoadBalancer
-
   ports:
     # Which port on the node is the service available through?
     - name: "forwarding-port"
