@@ -8,14 +8,11 @@ import (
 	t "goshelly-server/template"
 	"io/ioutil"
 	"strconv"
-
-	// "io/ioutil"
 	"net/http"
 	"net/mail"
 	"os"
 	"strings"
 	"time"
-
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
@@ -90,7 +87,6 @@ func addUser() {
 			c.JSON(http.StatusInternalServerError, gin.H{"message": "Could not create user."})
 			return
 		}
-
 		c.JSON(http.StatusCreated, gin.H{"message": "User created."})
 	})
 }
@@ -99,7 +95,6 @@ func removeUser() {
 	r.DELETE("/delete/", func(c *gin.Context) {
 		var user t.LoggedUser
 		c.BindJSON(&user)
-		// fmt.Println(strings.TrimSpace(user.EMAIL))
 		if !b.FindUser(strings.TrimSpace(user.EMAIL)) {
 			c.JSON(http.StatusNotFound, gin.H{"message": "User not found."})
 			return
@@ -238,7 +233,6 @@ func createLink() {
 			c.JSON(http.StatusBadRequest, gin.H{"message": "Permission denied. Please log in again."})
 			return
 		}
-
 		link := DOMAIN + "/logs/" + user.EMAIL + "/" + strconv.Itoa(user.LOGID) + "/"
 		c.JSON(http.StatusOK, gin.H{"message": link})
 	})
@@ -276,6 +270,7 @@ func hostLog() {
 				"message": "InternalServerError",
 			})
 		}
+
 		c.String(http.StatusOK, string(message))
 	})
 }
