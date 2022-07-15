@@ -63,3 +63,5 @@ spec:
       # nodePort: 32123
       port: 8000
       targetPort: 8000
+  selector:
+    app: goshelly
